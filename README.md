@@ -33,19 +33,16 @@ Ce dépôt utilise une structure de branches claire :
 
 - `main` : Branche principale contenant les modifications et améliorations du code
 - `dmachard` : Branche contenant uniquement les modifications de setup.py pour l'installation via pip
-- `upstream` : Branche contenant exactement le code upstream, sans modifications (non installable via pip)
 
 ## Gestion des versions
 
 Les versions sont gérées par des tags Git suivant le format :
 - `vX.Y.Z` : Version X.Y.Z avec modifications et améliorations (version par défaut)
 - `vX.Y.Z-dmachard` : Version X.Y.Z sans modifications (sauf setup.py)
-- `vX.Y.Z-upstream` : Version X.Y.Z exactement comme dans le dépôt original (non installable via pip)
 
 ### Exemples
 - `v0.14.3` : Version 0.14.3 avec modifications et améliorations
 - `v0.14.3-dmachard` : Version 0.14.3 sans modifications (sauf setup.py)
-- `v0.14.3-upstream` : Version 0.14.3 exactement comme dans le dépôt original
 
 ## Script create-setup.py
 
