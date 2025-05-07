@@ -22,17 +22,24 @@ jobs:
       # Update dmachard branch
       - name: Update dmachard branch
         run: |
-          git checkout -B dmachard
+          # Switch to dmachard branch and ensure it's up to date
+          git checkout dmachard
+          git pull origin dmachard
+          
+          # Add upstream remote and fetch
           git remote add upstream-remote https://github.com/dmachard/creditagricole-particuliers.git
           git fetch upstream-remote
-          git reset --hard upstream-remote/master
+          
+          # Merge upstream changes
+          git merge upstream-remote/master
+          
           # Create setup.py using the script with version
           VERSION=$(git describe --tags --abbrev=0)
           python3 create-setup.py "${VERSION#v}"
           git add setup.py
           git commit -m "Update setup.py to version ${VERSION#v}"
           git tag "v${VERSION#v}-dmachard"
-          git push origin dmachard --force
+          git push origin dmachard
           git push origin "v${VERSION#v}-dmachard"
 
       # Update main branch

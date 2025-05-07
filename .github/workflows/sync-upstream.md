@@ -5,10 +5,11 @@
 Ce workflow est déclenché lorsqu'une nouvelle version est publiée dans le dépôt original (upstream). Il effectue les opérations suivantes dans l'ordre :
 
 1. **Mise à jour de la branche `dmachard`**
-   - Synchronise la branche `dmachard` directement avec le dépôt original
+   - Synchronise la branche `dmachard` avec le dépôt original via un merge
+   - Conserve toutes les modifications du dépôt original
    - Génère un nouveau `setup.py` avec la dernière version détectée
    - Crée un nouveau tag au format `vX.Y.Z-dmachard`
-   - Cette branche contient uniquement les modifications de `setup.py`
+   - Cette branche contient toutes les modifications du dépôt original plus les modifications de `setup.py`
 
 2. **Mise à jour de la branche `main`**
    - Bascule sur la branche `main`
@@ -19,7 +20,7 @@ Ce workflow est déclenché lorsqu'une nouvelle version est publiée dans le dé
 ### Format des tags
 
 - `vX.Y.Z` : Version X.Y.Z avec modifications et améliorations (branche `main`)
-- `vX.Y.Z-dmachard` : Version X.Y.Z sans modifications (sauf setup.py) (branche `dmachard`)
+- `vX.Y.Z-dmachard` : Version X.Y.Z du dépôt original avec mise à jour de setup.py (branche `dmachard`)
 
 ### Déclencheurs
 
