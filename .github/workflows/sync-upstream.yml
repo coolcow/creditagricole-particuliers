@@ -23,7 +23,7 @@ jobs:
       - name: Update upstream branch
         run: |
           git checkout -B upstream
-          git remote add upstream https://github.com/original-repo/creditagricole-particuliers.git
+          git remote add upstream https://github.com/dmachard/creditagricole-particuliers.git
           git fetch upstream
           git reset --hard upstream/main
           VERSION=$(git describe --tags --abbrev=0)
