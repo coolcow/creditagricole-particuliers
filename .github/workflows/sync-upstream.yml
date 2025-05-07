@@ -19,26 +19,16 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
-      # Update upstream branch
-      - name: Update upstream branch
-        run: |
-          git checkout -B upstream
-          git remote add upstream https://github.com/dmachard/creditagricole-particuliers.git
-          git fetch upstream
-          git reset --hard upstream/master
-          VERSION=$(git describe --tags --abbrev=0)
-          git tag "v${VERSION#v}-upstream"
-          git push origin upstream --force
-          git push origin "v${VERSION#v}-upstream"
-
       # Update dmachard branch
       - name: Update dmachard branch
         run: |
           git checkout -B dmachard
-          git reset --hard upstream
-          # Update setup.py with new version
+          git remote add upstream-remote https://github.com/dmachard/creditagricole-particuliers.git
+          git fetch upstream-remote
+          git reset --hard upstream-remote/master
+          # Create setup.py using the script with version
           VERSION=$(git describe --tags --abbrev=0)
-          sed -i "s/version=.*/version='${VERSION#v}',/" setup.py
+          python3 create-setup.py "${VERSION#v}"
           git add setup.py
           git commit -m "Update setup.py to version ${VERSION#v}"
           git tag "v${VERSION#v}-dmachard"
