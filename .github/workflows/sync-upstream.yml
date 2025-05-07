@@ -34,19 +34,19 @@ jobs:
           git merge upstream-remote/master
           
           # Create setup.py using the script with version
-          VERSION=$(git describe --tags --abbrev=0)
-          python3 create-setup.py "${VERSION#v}"
+          VERSION=$(git describe --tags --abbrev=0 | sed 's/-.*$//' | sed 's/^v//')
+          python3 create-setup.py "${VERSION}"
           git add setup.py
-          git commit -m "Update setup.py to version ${VERSION#v}"
-          git tag "v${VERSION#v}-dmachard"
+          git commit -m "Update setup.py to version ${VERSION}"
+          git tag "v${VERSION}-dmachard"
           git push origin dmachard
-          git push origin "v${VERSION#v}-dmachard"
+          git push origin "v${VERSION}-dmachard"
 
       # Update main branch
       - name: Update main branch
         run: |
           git checkout main
           git merge dmachard
-          git tag "v${VERSION#v}"
+          git tag "v${VERSION}"
           git push origin main
-          git push origin "v${VERSION#v}" 
+          git push origin "v${VERSION}" 
