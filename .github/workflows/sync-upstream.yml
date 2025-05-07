@@ -25,7 +25,7 @@ jobs:
           git checkout -B upstream
           git remote add upstream https://github.com/dmachard/creditagricole-particuliers.git
           git fetch upstream
-          git reset --hard upstream/main
+          git reset --hard upstream/master
           VERSION=$(git describe --tags --abbrev=0)
           git tag "v${VERSION#v}-upstream"
           git push origin upstream --force
