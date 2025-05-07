@@ -1,195 +1,77 @@
 # Client Python pour la banque Crédit agricole - Particuliers
 
-![](https://github.com/dmachard/creditagricole_particuliers/workflows/Publish%20to%20PyPI/badge.svg)
+Ce fork a été créé pour permettre l'installation directe depuis Git avec pip. Cela offre deux avantages principaux :
 
-Ce client Python est à destination des particuliers souhaitant récupérer ses opérations bancaires stockées par le Crédit Agricole.
+1. **Transparence** : Vous pouvez voir exactement quel code installé est, car il est directement depuis le dépôt Git.
+2. **Flexibilité** : Vous pouvez facilement basculer entre différentes versions selon vos besoins.
 
-> Ce client a été construit suite à l'analyse des requêtes web effectuées par l'application web  https://www.credit-agricole.fr/. 
-> Aucune garantie de fonctionnement à long terme pour ce client.
-
-> Aucun numéro de compte ni mot de passe n'est stocké par ce client !
+Ce fork est automatiquement synchronisé avec le dépôt original et inclut une `setup.py` pour faciliter l'installation.
 
 ## Installation
 
-```python
-pip install creditagricole_particuliers
-```
-  
-## Authentification
+### Installation de la dernière version
+```bash
+# Dernière version avec modifications (par défaut)
+pip install git+https://github.com/coolcow/creditagricole-particuliers.git
 
-Paramètres pour l'authentification:
-- `username` (string): votre numéro de compte bancaire 
-- `password` (list of integer): votre mot de passe
-- `department` (integer): numéro de département de votre caisse régionale
-
-```python
-from creditagricole_particuliers import Authenticator
-
-session = Authenticator(username="01234567890", 
-                        password=[1, 2, 3, 4, 5, 6], 
-                        department=999)
+# Dernière version sans modifications (sauf setup.py)
+pip install git+https://github.com/coolcow/creditagricole-particuliers.git@dmachard
 ```
 
-## Lister l'ensemble des comptes bancaires
+### Installation d'une version spécifique
+```bash
+# Version 0.14.3 avec modifications
+pip install git+https://github.com/coolcow/creditagricole-particuliers.git@v0.14.3
 
-```python
-from creditagricole_particuliers import Accounts
-
-accounts = Accounts(session=session)
-for acc in accounts:
-    print(acc)
+# Version 0.14.3 sans modifications (sauf setup.py)
+pip install git+https://github.com/coolcow/creditagricole-particuliers.git@v0.14.3-dmachard
 ```
 
-Output:
+## Gestion des branches
 
-```
-Compte[numero=xxxxxxxxxxx, produit=Compte de Dépôt]
-Compte[numero=xxxxxxxxxxx, produit=Livret A]
-Compte[numero=xxxxxxxxxxx, produit=Livret Tiwi]
-```
+Ce dépôt utilise une structure de branches claire :
 
-Format JSON:
+- `main` : Branche principale contenant les modifications et améliorations du code
+- `dmachard` : Branche contenant uniquement les modifications de setup.py pour l'installation via pip
+- `upstream` : Branche contenant exactement le code upstream, sans modifications (non installable via pip)
 
-```python
-accounts = Accounts(session=session)
-print(accounts.as_json())
-```
+## Gestion des versions
 
-## Rechercher un compte bancaire
+Les versions sont gérées par des tags Git suivant le format :
+- `vX.Y.Z` : Version X.Y.Z avec modifications et améliorations (version par défaut)
+- `vX.Y.Z-dmachard` : Version X.Y.Z sans modifications (sauf setup.py)
+- `vX.Y.Z-upstream` : Version X.Y.Z exactement comme dans le dépôt original (non installable via pip)
 
-```python
-from creditagricole_particuliers import Accounts
+### Exemples
+- `v0.14.3` : Version 0.14.3 avec modifications et améliorations
+- `v0.14.3-dmachard` : Version 0.14.3 sans modifications (sauf setup.py)
+- `v0.14.3-upstream` : Version 0.14.3 exactement comme dans le dépôt original
 
-account = Accounts(session=session).search(num="<n° de compte bancaire>")
-print(account)
-```
+## Script create-setup.py
 
-Format JSON:
+Ce script est un outil de maintenance qui automatise la création du fichier `setup.py` pour ce fork. Voici ses principales fonctionnalités :
 
-```python
-account = Accounts(session=session).search(num="<n° de compte bancaire>")
-print(account.as_json())
-```
+1. **Récupération automatique de la version** : Le script interroge l'API GitHub pour obtenir la dernière version disponible dans le dépôt original.
+2. **Génération du setup.py** : Il crée automatiquement un fichier `setup.py` avec :
+   - La dernière version détectée
+   - Les dépendances nécessaires
+   - Les métadonnées du projet
+   - Les informations de classification Python
 
-## Récupération du solde d'un compte
+### Utilisation
 
-
-```python
-from creditagricole_particuliers import Accounts
-
-account = Accounts(session=session).search(num="<n° de compte bancaire>")
-print(account.get_solde())
-```
-
-exemple pour la totalité des comptes
-
-
-```python
-from creditagricole_particuliers import Accounts
-
-solde = Accounts(session=session).get_solde()
-print(solde)
-```
-
-## Récupération des opérations bancaires
-
-Exemple pour récupérer les 30 dernières opérations
-
-```python
-from creditagricole_particuliers import Accounts
-
-# search account
-account = Accounts(session=session).search(num="<n° de compte bancaire>")
-
-# get operations
-operations = account.get_operations(count=30)
-for op in operations:
-    print(op)
-```
-
-Output:
-
-```
-Operation[date=Dec 31, 2020 12:00:00 AM, libellé=DE L'ANNEE TAUX  0,500%, montant=0.00]
-Operation[date=Dec 31, 2020 12:00:00 AM, libellé=DE L'ANNEE TAUX  0,750%, montant=0.00]
-
-```
-
-
-Format JSON et filtrage par date
-
-```python
-account = Accounts(session=session).search(num="<n° de compte bancaire>")
-operations = account.get_operations(date_start="2021-06-15", date_stop="2021-06-30", count=30)
-print(operations.as_json())
-```
-
-## Lister les cartes bancaires
-
-```python
-from creditagricole_particuliers import Cards
-
-cards = Cards(session=session)
-for cb in cards:
-    print(cb)
-```
-
-Output:
+Pour mettre à jour le `setup.py` avec la dernière version :
 
 ```bash
-Carte[compte=xxxxxxxxxx, type=MCD, titulaire=xxxxxxxxxxx]
-Carte[compte=xxxxxxxxxx, type=Mastercard sans contact débit immédiat, titulaire=xxxxxxxxxxxxx]
+python create-setup.py
 ```
 
-Format JSON:
-
-```python
-cards = Cards(session=session)
-print(cards.as_json())
-```
-
-## Rechercher une carte bancaire
-
-```python
-from creditagricole_particuliers import Cards
-
-cb = Cards(session=session).search(num_last_digits="<4 derniers chiffres de votre carte bancaire>")
-print(cb)
-```
-
-## Récupération des opérations pour une carte bancaire à débit différé
-
-```python
-from creditagricole_particuliers import Cards
-
-# search account
-cb = Cards(session=session).search(num_last_digits="<4 derniers chiffres de votre carte bancaire>")
-
-# get operations
-operations = cb.get_operations()
-for op in operations:
-    print(op)
-```
-
-## Récupération du code IBAN d'un compte
-
-```python
-from creditagricole_particuliers import Accounts
-
-account = Accounts(session=session).search(num="xxxxxxxxxx")
-print(account.get_iban())
-```
-
-Output:
+Pour créer le `setup.py` avec une version spécifique :
 
 ```bash
-Iban[compte=xxxxx, code=FRxxxxxxxxxxxxxxxxxxxxxxxx]
+python create-setup.py 0.14.3
 ```
 
-Format JSON:
+Le script vérifiera automatiquement si la version spécifiée existe dans le dépôt original. Si la version n'est pas fournie, il utilisera la dernière version disponible.
 
-```python
-account = Accounts(session=session).search(num="xxxxxxxxxx")
-iban = account.get_iban()
-print(iban.as_json())
-```
+Pour plus d'informations sur l'utilisation de ce client, veuillez consulter la [documentation originale](https://github.com/dmachard/creditagricole-particuliers).

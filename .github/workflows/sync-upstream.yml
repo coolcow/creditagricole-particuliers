@@ -1,0 +1,55 @@
+name: Sync with Upstream
+
+on:
+  workflow_dispatch:  # Manual trigger
+  repository_dispatch:  # Triggered by upstream releases
+    types: [upstream_release]
+
+jobs:
+  sync-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      # Update upstream branch
+      - name: Update upstream branch
+        run: |
+          git checkout -B upstream
+          git remote add upstream https://github.com/original-repo/creditagricole-particuliers.git
+          git fetch upstream
+          git reset --hard upstream/main
+          VERSION=$(git describe --tags --abbrev=0)
+          git tag "v${VERSION#v}-upstream"
+          git push origin upstream --force
+          git push origin "v${VERSION#v}-upstream"
+
+      # Update dmachard branch
+      - name: Update dmachard branch
+        run: |
+          git checkout -B dmachard
+          git reset --hard upstream
+          # Update setup.py with new version
+          VERSION=$(git describe --tags --abbrev=0)
+          sed -i "s/version=.*/version='${VERSION#v}',/" setup.py
+          git add setup.py
+          git commit -m "Update setup.py to version ${VERSION#v}"
+          git tag "v${VERSION#v}-dmachard"
+          git push origin dmachard --force
+          git push origin "v${VERSION#v}-dmachard"
+
+      # Update main branch
+      - name: Update main branch
+        run: |
+          git checkout main
+          git merge dmachard
+          git tag "v${VERSION#v}"
+          git push origin main
+          git push origin "v${VERSION#v}" 
