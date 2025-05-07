@@ -7,6 +7,10 @@ Ce fork a été créé pour permettre l'installation directe depuis Git avec pip
 
 Ce fork est automatiquement synchronisé avec le dépôt original et inclut une `setup.py` pour faciliter l'installation.
 
+## Changements
+
+Actuellement, il n'y a pas de modifications par rapport au dépôt original.
+
 ## Installation
 
 ### Installation de la dernière version
