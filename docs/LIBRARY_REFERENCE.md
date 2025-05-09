@@ -36,7 +36,7 @@ Handles user authentication and session management.
 | `url` | `str` | Base URL for Credit Agricole website |
 | `ssl_verify` | `bool` | SSL verification flag |
 | `username` | `str` | User's login username |
-| `password` | `str` | User's login password |
+| `password` | `list[int]` | User's login password as array of digits |
 | `department` | `int` | User's department code |
 | `regional_bank_url` | `str` | Regional bank URL prefix |
 | `cookies` | `dict` | Session cookies |
@@ -45,10 +45,10 @@ Handles user authentication and session management.
 ##### Methods
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `__init__` | `username: str`<br>`password: str`<br>`department: int` | - | Initializes authenticator |
-| `find_regional_bank` | `use_local: bool = True` | `dict` | Finds regional bank URL |
+| `__init__` | `username: str`<br>`password: list[int]`<br>`department: int` | - | Initializes authenticator and performs authentication |
+| `find_regional_bank` | `use_local: bool = True` | - | Finds regional bank URL, uses local aliases.json if use_local is True |
 | `map_digit` | `key_layout: list[str]`<br>`digit: str` | `int` | Maps digits to keypad layout |
-| `authenticate` | - | `dict` | Performs authentication |
+| `authenticate` | - | - | Performs authentication process |
 
 ### Account Management
 
@@ -74,7 +74,7 @@ Represents a single bank account.
 | `get_iban` | - | `Iban` | Returns IBAN information |
 | `get_operations` | `date_start: str = None`<br>`date_stop: str = None`<br>`count: int = 100`<br>`sleep: int \| None = None` | `Operations` | Retrieves account operations |
 | `as_json` | - | `str` | Returns account details as JSON |
-| `get_solde` | - | `float` | Returns account balance |
+| `get_solde` | - | `float` | Returns account balance (montantEpargne if available, otherwise solde) |
 
 #### `Accounts` Class
 **File**: `accounts.py`
@@ -90,14 +90,14 @@ Manages multiple bank accounts.
 ##### Methods
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `__init__` | `session: Authenticator` | - | Initializes accounts manager |
+| `__init__` | `session: Authenticator` | - | Initializes accounts manager and automatically calls get_accounts_per_products() |
 | `__iter__` | - | `Iterator[Account]` | Iterator implementation |
 | `__next__` | - | `Account` | Next item in iteration |
 | `search` | `num: str` | `Account` | Searches for account by number |
 | `as_json` | - | `str` | Returns all accounts as JSON |
-| `get_accounts_per_products` | - | `dict` | Retrieves accounts grouped by product type |
+| `get_accounts_per_products` | - | - | Retrieves accounts grouped by product type and populates accounts_list |
 | `get_solde` | - | `float` | Returns total balance across all accounts |
-| `get_solde_per_products` | - | `dict` | Returns balances grouped by product type |
+| `get_solde_per_products` | - | `dict[str, float]` | Returns balances grouped by product type |
 
 ### Operations
 
@@ -109,7 +109,7 @@ Represents a single bank operation/transaction.
 ##### Properties
 | Property | Type | Description |
 |----------|------|-------------|
-| `descr` | `dict` | Operation details |
+| `descr` | `dict` | Complete operation details |
 | `libelleOp` | `str` | Operation description |
 | `dateOp` | `str` | Operation date |
 | `montantOp` | `float` | Operation amount |
@@ -143,7 +143,7 @@ Manages bank operations/transactions.
 | `__iter__` | - | `Iterator[Operation]` | Iterator implementation |
 | `__next__` | - | `Operation` | Next item in iteration |
 | `as_json` | - | `str` | Returns all operations as JSON |
-| `get_operations` | `count: int`<br>`startIndex: int \| None = None`<br>`limit: int = 30`<br>`sleep: int \| None = None` | `list[Operation]` | Retrieves operations within date range |
+| `get_operations` | `count: int`<br>`startIndex: str \| None = None`<br>`limit: int = 30`<br>`sleep: int \| None = None` | - | Retrieves operations within date range and populates list_operations. Uses pagination with limit parameter to control batch size. Sleep parameter allows rate limiting between requests. |
 
 #### `DeferredOperations` Class
 **File**: `operations.py`
@@ -166,7 +166,7 @@ Manages deferred card operations.
 | `__iter__` | - | `Iterator[Operation]` | Iterator implementation |
 | `__next__` | - | `Operation` | Next item in iteration |
 | `as_json` | - | `str` | Returns all deferred operations as JSON |
-| `get_operations` | - | `list[Operation]` | Retrieves deferred operations |
+| `get_operations` | - | - | Retrieves deferred operations and populates list_operations |
 
 ### Cards Management
 
@@ -212,7 +212,7 @@ Manages multiple bank cards.
 | `__next__` | - | `Card` | Next item in iteration |
 | `as_json` | - | `str` | Returns all cards as JSON |
 | `search` | `num_last_digits: str` | `Card` | Searches for card by last digits |
-| `get_cards_per_account` | - | `dict` | Retrieves cards grouped by account |
+| `get_cards_per_account` | - | - | Retrieves cards grouped by account and populates cards_list |
 
 ### IBAN Management
 
@@ -228,7 +228,7 @@ Manages IBAN information for an account.
 | `compteIdx` | `str` | Account index |
 | `numeroCompte` | `str` | Account number |
 | `grandeFamilleCode` | `str` | Product family code |
-| `iban` | `dict` | IBAN details |
+| `iban` | `dict` | Complete IBAN details |
 | `ibanCode` | `str` | IBAN code |
 
 ##### Methods
@@ -236,7 +236,7 @@ Manages IBAN information for an account.
 |--------|------------|---------|-------------|
 | `__init__` | `session: Authenticator`<br>`compteIdx: str`<br>`grandeFamilleCode: str`<br>`numeroCompte: str` | - | Initializes IBAN manager |
 | `__str__` | - | `str` | String representation of the IBAN |
-| `get_iban_data` | - | `dict` | Retrieves IBAN information |
+| `get_iban_data` | - | - | Retrieves IBAN information from the API and populates iban and ibanCode |
 | `as_json` | - | `str` | Returns IBAN details as JSON |
 
 ### Session Management
@@ -269,13 +269,13 @@ Manages regional bank information.
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `__init__` | - | - | Initializes regional banks manager |
-| `by_departement` | `department: int` | `dict` | Retrieves regional bank information by department code |
+| `by_departement` | `department: int` | `dict` | Retrieves regional bank information by department code. Returns first matching bank or raises exception if none found. |
 
 ## Data Structures
 
 ### Constants
 
-#### `FAMILLE_PRODUITS`
+#### `FAMILLE_PRODUITS` (defined in accounts.py)
 ```python
 [
     {"code": 1, "familleProduit": "COMPTES"},
@@ -294,7 +294,7 @@ Manages regional bank information.
     "grandeFamilleProduitCode": "string",
     "libelleProduit": "string",
     "solde": "float",
-    "montantEpargne": "float",  // Optional
+    "montantEpargne": "float",  // Optional, only for savings accounts
     "devise": "string",
     "dateSolde": "string",
     "typeCompte": "string",
@@ -302,91 +302,16 @@ Manages regional bank information.
 }
 ```
 
-#### 2. Operation Object Structure
+#### Operation Object Structure
 ```json
 {
     "libelleOperation": "string",
     "dateOperation": "string",
-    "montant": "float",
-    "devise": "string",
-    "categorie": "string",
-    "typeOperation": "string",
-    "statut": "string",
-    "dateValeur": "string",
-    "reference": "string",
-    "detailOperation": "string"  // Optional
+    "montant": "float"
 }
 ```
 
-#### 3. IBAN Object Structure
-```json
-{
-    "iban": "string",
-    "bic": "string",
-    "titulaire": "string",
-    "domiciliation": "string"
-}
-```
-
-#### 4. Regional Bank Object Structure
-```json
-{
-    "regionalBankUrlPrefix": "string",
-    "code": "string",
-    "name": "string",
-    "department": "string"
-}
-```
-
-#### 5. Authentication Response Structure
-```json
-{
-    "keypadId": "string",
-    "keyLayout": ["string"],
-    "status": "string",
-    "message": "string"  // Optional
-}
-```
-
-#### 6. Deferred Operation Structure
-```json
-{
-    "libelleOperation": "string",
-    "dateOperation": "string",
-    "montant": "float",
-    "devise": "string",
-    "datePrelevement": "string",
-    "statut": "string",
-    "carteIdx": "string",
-    "reference": "string"
-}
-```
-
-#### 7. Account Balance Summary Structure
-```json
-{
-    "COMPTES": "float",
-    "EPARGNE_DISPONIBLE": "float",
-    "EPARGNE_AUTRE": "float"
-}
-```
-
-#### 8. Card Object Structure
-```json
-{
-    "idCompte": "string",
-    "typeCarte": "string",
-    "idCarte": "string",
-    "titulaire": "string",
-    "index": "string",
-    "statut": "string",
-    "dateExpiration": "string",
-    "plafond": "float",
-    "plafondDisponible": "float"
-}
-```
-
-#### 9. IBAN Data Structure
+#### IBAN Object Structure
 ```json
 {
     "ibanData": {
@@ -404,7 +329,7 @@ Manages regional bank information.
 }
 ```
 
-#### 10. Regional Bank Response Structure
+#### Regional Bank Object Structure
 ```json
 {
     "regionalBankUrlPrefix": "string",
@@ -417,4 +342,41 @@ Manages regional bank information.
 }
 ```
 
-Note: All monetary values are returned as floats with 2 decimal places. Dates are returned in ISO 8601 format (YYYY-MM-DD). String values may be null if the information is not available. 
+#### Authentication Response Structure
+```json
+{
+    "keypadId": "string",
+    "keyLayout": ["string"]
+}
+```
+
+#### Deferred Operation Structure
+```json
+{
+    "libelleOperation": "string",
+    "dateOperation": "string",
+    "montant": "float"
+}
+```
+
+#### Account Balance Summary Structure
+```json
+{
+    "COMPTES": "float",
+    "EPARGNE_DISPONIBLE": "float",
+    "EPARGNE_AUTRE": "float"
+}
+```
+
+#### Card Object Structure
+```json
+{
+    "idCompte": "string",
+    "typeCarte": "string",
+    "idCarte": "string",
+    "titulaire": "string",
+    "index": "string"
+}
+```
+
+Note: All monetary values are returned as floats. Dates are returned in ISO 8601 format (YYYY-MM-DD). String values may be null if the information is not available.
