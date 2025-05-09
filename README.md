@@ -9,9 +9,9 @@ Ce fork est automatiquement synchronisé avec le dépôt original et inclut une 
 
 ## Changements et Améliorations
 
-Une documentation technique complète de la bibliothèque est maintenant disponible dans le fichier `docs/LIBRARY_REFERENCE.md`. Cette documentation détaille l'ensemble des composants, méthodes et structures de données disponibles dans la bibliothèque.
+Une documentation technique complète de la bibliothèque est maintenant disponible dans le fichier [LIBRARY_REFERENCE.md](docs/LIBRARY_REFERENCE.md). Cette documentation détaille l'ensemble des composants, méthodes et structures de données disponibles dans la bibliothèque.
 
-Des exemples d'utilisation ont été ajoutés dans le dossier `examples/` et sont documentés dans `docs/EXAMPLES.md`. Ces exemples illustrent les cas d'utilisation les plus courants de la bibliothèque.
+Des exemples d'utilisation ont été ajoutés dans le dossier `examples/` et sont documentés dans [EXAMPLES.md](docs/EXAMPLES.md). Ces exemples illustrent les cas d'utilisation les plus courants de la bibliothèque.
 
 ## Installation
 
