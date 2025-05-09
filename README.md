@@ -7,13 +7,11 @@ Ce fork a été créé pour permettre l'installation directe depuis Git avec pip
 
 Ce fork est automatiquement synchronisé avec le dépôt original et inclut une `setup.py` pour faciliter l'installation.
 
-## Changements
-
-Actuellement, il n'y a pas de modifications par rapport au dépôt original.
-
 ## Changements et Améliorations
 
 Une documentation technique complète de la bibliothèque est maintenant disponible dans le fichier `docs/LIBRARY_REFERENCE.md`. Cette documentation détaille l'ensemble des composants, méthodes et structures de données disponibles dans la bibliothèque.
+
+Des exemples d'utilisation ont été ajoutés dans le dossier `examples/` et sont documentés dans `docs/EXAMPLES.md`. Ces exemples illustrent les cas d'utilisation les plus courants de la bibliothèque.
 
 ## Installation
 
@@ -34,6 +32,12 @@ pip install git+https://github.com/coolcow/creditagricole-particuliers.git@v0.14
 # Version 0.14.3 sans modifications (sauf setup.py)
 pip install git+https://github.com/coolcow/creditagricole-particuliers.git@v0.14.3-dmachard
 ```
+
+## Exemples
+
+Des exemples d'utilisation sont disponibles dans le dossier `examples/` du dépôt. Ces exemples couvrent les cas d'utilisation les plus courants et vous aideront à démarrer rapidement avec la bibliothèque.
+
+Pour plus de détails sur les exemples disponibles, consultez le fichier `docs/EXAMPLES.md`.
 
 ## Gestion des branches
 
