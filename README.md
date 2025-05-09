@@ -11,6 +11,10 @@ Ce fork est automatiquement synchronisé avec le dépôt original et inclut une 
 
 Actuellement, il n'y a pas de modifications par rapport au dépôt original.
 
+## Changements et Améliorations
+
+Une documentation technique complète de la bibliothèque est maintenant disponible dans le fichier `docs/LIBRARY_REFERENCE.md`. Cette documentation détaille l'ensemble des composants, méthodes et structures de données disponibles dans la bibliothèque.
+
 ## Installation
 
 ### Installation de la dernière version
