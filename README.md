@@ -5,6 +5,16 @@ Ce fork a été créé pour permettre l'installation directe depuis Git avec pip
 1. **Transparence** : Vous pouvez voir exactement quel code installé est, car il est directement depuis le dépôt Git.
 2. **Flexibilité** : Vous pouvez facilement basculer entre différentes versions selon vos besoins.
 
+## Documentation
+
+La documentation complète est disponible dans les sections suivantes :
+
+- [Documentation technique de la bibliothèque](docs/LIBRARY_REFERENCE.md)
+- [Exemples d'utilisation](docs/EXAMPLES.md)
+- [Utilisation des données d'exemple](samples/README.md)
+
+> **Note importante**: Pour naviguer dans la documentation, veuillez utiliser la table des matières dans chaque fichier README.
+
 ## Installation
 
 ### Installation de la dernière version (0.14.3)
