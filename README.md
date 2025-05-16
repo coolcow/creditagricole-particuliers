@@ -15,6 +15,16 @@ La documentation complète est disponible dans les sections suivantes :
 
 > **Note importante**: Pour naviguer dans la documentation, veuillez utiliser la table des matières dans chaque fichier README.
 
+## Documentation
+
+La documentation complète est disponible dans les sections suivantes :
+
+- [Documentation technique de la bibliothèque](creditagricole_particuliers/README.md)
+- [Documentation des échantillons](samples/README.md)
+- [Documentation des fichiers Mock](mocks/README.md)
+
+> **Note importante**: Pour naviguer dans la documentation, veuillez utiliser la table des matières dans chaque fichier README.
+
 ## Installation
 
 ### Installation de la dernière version (0.14.3)
