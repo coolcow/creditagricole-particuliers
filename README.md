@@ -20,6 +20,7 @@ La documentation complète est disponible dans les sections suivantes :
 La documentation complète est disponible dans les sections suivantes :
 
 - [Documentation technique de la bibliothèque](creditagricole_particuliers/README.md)
+- [Documentation des exemples](examples/README.md)
 - [Documentation des échantillons](samples/README.md)
 - [Documentation des fichiers Mock](mocks/README.md)
 
