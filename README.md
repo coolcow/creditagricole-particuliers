@@ -10,7 +10,7 @@ Ce fork a été créé pour permettre l'installation directe depuis Git avec pip
 La documentation complète est disponible dans les sections suivantes :
 
 - [Documentation technique de la bibliothèque](docs/LIBRARY_REFERENCE.md)
-- [Exemples d'utilisation](examples/README.md)
+- [Exemples d'utilisation](docs/EXAMPLES.md)
 - [Utilisation des données d'exemple](samples/README.md)
 
 > **Note importante**: Pour naviguer dans la documentation, veuillez utiliser la table des matières dans chaque fichier README.
