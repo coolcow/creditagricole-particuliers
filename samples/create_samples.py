@@ -4,9 +4,13 @@ This script connects to Crédit Agricole and extracts response structures to und
 the complete schema of objects returned by the API.
 Creates separate files for each account, card, etc.
 
-Two available modes:
-- 'data': saves real data (sensitive) without suffix
-- 'types': saves only the structure with dummy values with the '_types' suffix
+Available modes:
+- 'json': saves json representations of the data with the '.json' extension suffix
+- 'types': saves type structure of the data with the '.json' extension suffix
+- 'string': saves string representations of the data with the '.txt' extension
+
+If no mode is specified, all modes will be executed.
+Multiple modes can be specified as comma-separated values.
 
 Mock functionality:
 - Use --mocks-dir to specify mock directory
@@ -33,6 +37,17 @@ def save_json(data, filename, target_dir):
     os.makedirs(target_dir, exist_ok=True)
     with open(os.path.join(target_dir, filename), 'w') as f:
         json.dump(data, f, indent=2)
+
+def save_str(data, filename, target_dir):
+    """Save data as string representation to a text file"""
+    os.makedirs(target_dir, exist_ok=True)
+    with open(os.path.join(target_dir, filename), 'w') as f:
+        if isinstance(data, list):
+            # For lists, write each item's string representation on a new line
+            for item in data:
+                f.write(str(item) + '\n')
+        else:
+            f.write(str(data))
 
 def convert_to_type_structure(data: Any) -> Any:
     """
@@ -70,15 +85,25 @@ def create_placeholder(original_id: str) -> str:
         return '0' * len(original_id)
     return 'placeholder'
 
+def get_target_dir(base_dir: str, mode: str, single_mode: bool) -> str:
+    """
+    Determines the target directory based on mode and whether it's a single mode.
+    If single_mode is True, returns base_dir directly.
+    Otherwise, creates a subdirectory for the mode.
+    """
+    if single_mode:
+        return base_dir
+    return os.path.join(base_dir, mode)
+
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(description='Extract Credit Agricole API schemas')
     parser.add_argument('--username', required=True, help='Username')
     parser.add_argument('--password', help='Password (digits only). If not provided, will be prompted securely')
     parser.add_argument('--department', required=True, type=int, help='Department code')
-    parser.add_argument('--output-dir', default=None, help='Output directory for samples')
-    parser.add_argument('--mode', choices=['data', 'types'], default='data',
-                       help="Generation mode: 'data' for real data (default), 'types' for structure with placeholders")
+    parser.add_argument('--output-dir', default='./output', help='Output directory for samples')
+    parser.add_argument('--mode', default=None,
+                       help="Generation modes (comma-separated): 'json' for real data, 'types' for structure with placeholders, 'string' for string representations. If not specified, all modes will be executed.")
     
     # Add mock functionality arguments
     parser.add_argument('--use-mocks-dir', default=None, help='Directory for mock files to use')
@@ -88,6 +113,15 @@ def main():
     
     args = parser.parse_args()
 
+    # Determine modes to execute
+    if args.mode is None:
+        modes = ['json', 'types', 'string']
+    else:
+        modes = [m.strip() for m in args.mode.split(',')]
+        if not all(m in ['json', 'types', 'string'] for m in modes):
+            print("Error: Invalid mode specified. Valid modes are: json, types, string")
+            return 1
+
     # Get password either from argument or prompt
     password = args.password
     if not password:
@@ -95,18 +129,6 @@ def main():
 
     # Convert password string to digits array
     password_digits = [int(d) for d in password]
-    
-    # Set default output directory based on mode if none provided
-    if args.output_dir is None:
-        if args.mode == 'data':
-            target_dir = './data'
-        else:  # types mode
-            target_dir = './types'
-    else:
-        target_dir = args.output_dir
-    
-    # Ensure output directory exists
-    os.makedirs(target_dir, exist_ok=True)
     
     # Create MockConfig object if mock functionality is enabled
     mock_config = None
@@ -136,138 +158,188 @@ def main():
         # Get specific regional bank for the user's department
         print(f"Getting regional bank information for department {args.department}...")
         bank = rb.by_departement(int(args.department))
-        # Apply type structure if needed
-        if args.mode == 'types':
-            bank = convert_to_type_structure(bank)
-            # Save with types suffix, no placeholder
-            save_json(bank, "regionalBank_types.json", target_dir)
-        else:
-            # Save without sample suffix in data mode
-            save_json(bank, f"regionalBank_{args.department}.json", target_dir)
+        
+        # Process data for each mode
+        for mode in modes:
+            target_dir = get_target_dir(args.output_dir, mode, len(modes) == 1)
+            
+            if mode == 'json':
+                save_json(bank, f"regionalBank_{args.department}.json", target_dir)
+            elif mode == 'types':
+                bank_types = convert_to_type_structure(bank)
+                save_json(bank_types, "regionalBank_types.json", target_dir)
+            elif mode == 'string':
+                save_str(rb.by_departement(int(args.department)), f"regionalBank_{args.department}.txt", target_dir)
         
         # Get accounts
         print("Getting accounts...")
         accs = accounts.Accounts(auth)
         accs_data = json.loads(accs.as_json())
         
-        # Apply type structure if needed
-        if args.mode == 'types':
-            if accs_data:
-                # Take only one example and convert to type structure
-                first_account = convert_to_type_structure(accs_data[0])
-                
-                # Save the first account as a global example
-                save_json(first_account, 'account_types.json', target_dir)
-                
-                # Get operations for the first account
-                real_account_number = accs_data[0]['numeroCompte']
-                
-                print(f"Retrieving operations for example account...")
-                acc = accs.search(real_account_number)
-                current_date = datetime.today()
-                previous_date = current_date - timedelta(days=30)
-                date_stop = current_date.strftime('%Y-%m-%d')
-                date_start = previous_date.strftime('%Y-%m-%d')
-                
-                try:
-                    ops = acc.get_operations(date_start=date_start, date_stop=date_stop, count=10)
-                    ops_data = json.loads(ops.as_json())
-                    if ops_data:
-                        # Save a global operation example
-                        operation_example = convert_to_type_structure(ops_data[0])
-                        save_json(operation_example, "operation_types.json", target_dir)
-                except Exception as e:
-                    print(f"Error retrieving operations: {e}")
-        else:
-            # Group accounts by grandeFamilleProduitCode
-            accounts_by_code = defaultdict(list)
-            for account in accs_data:
-                code = account.get('grandeFamilleProduitCode', 'unknown')
-                accounts_by_code[code].append(account)
+        # Process accounts for each mode
+        for mode in modes:
+            target_dir = get_target_dir(args.output_dir, mode, len(modes) == 1)
             
-            # Save all accounts into a single file
-            save_json(accs_data, "accounts.json", target_dir)
+            if mode == 'json':
+                # Group accounts by grandeFamilleProduitCode
+                accounts_by_code = defaultdict(list)
+                for account in accs_data:
+                    code = account.get('grandeFamilleProduitCode', 'unknown')
+                    accounts_by_code[code].append(account)
+                
+                # Save all accounts into a single file
+                save_json(accs_data, "accounts.json", target_dir)
+                
+                # Process each account for operations and IBAN
+                for account in accs_data:
+                    account_number = account['numeroCompte']
+                    print(f"Getting operations for account {account_number}...")
+                    
+                    # Get operations for this account
+                    acc = accs.search(account_number)
+                    current_date = datetime.today()
+                    previous_date = current_date - timedelta(days=30)
+                    date_stop = current_date.strftime('%Y-%m-%d')
+                    date_start = previous_date.strftime('%Y-%m-%d')
+                    
+                    try:
+                        ops = acc.get_operations(date_start=date_start, date_stop=date_stop, count=10)
+                        ops_data = json.loads(ops.as_json())
+                        save_json(ops_data, f"account_{account_number}_operations.json", target_dir)
+                    except Exception as e:
+                        print(f"Error getting operations for account {account_number}: {e}")
+                    
+                    # Create empty IBAN file
+                    print(f"Creating empty IBAN file for account {account_number}...")
+                    try:
+                        save_str([], f"account_{account_number}_iban.txt", target_dir)
+                    except Exception as e:
+                        print(f"Error creating IBAN file for account {account_number}: {e}")
             
-            # Process each account for operations and IBAN
-            for account in accs_data:
-                account_number = account['numeroCompte']
-                print(f"Getting operations for account {account_number}...")
-                
-                # Get operations for this account
-                acc = accs.search(account_number)
-                current_date = datetime.today()
-                previous_date = current_date - timedelta(days=30)
-                date_stop = current_date.strftime('%Y-%m-%d')
-                date_start = previous_date.strftime('%Y-%m-%d')
-                
-                try:
-                    ops = acc.get_operations(date_start=date_start, date_stop=date_stop, count=10)
-                    ops_data = json.loads(ops.as_json())
-                    save_json(ops_data, f"account_{account_number}_operations.json", target_dir)
-                except Exception as e:
-                    print(f"Error getting operations for account {account_number}: {e}")
-                
-                # Get IBAN for this account (empty object if not available)
-                print(f"Getting IBAN for account {account_number}...")
-                try:
-                    # We're just creating an empty object for IBAN as seen in the sample
-                    # You might need to implement the actual IBAN retrieval if needed
-                    save_json({}, f"account_{account_number}_iban.json", target_dir)
-                except Exception as e:
-                    print(f"Error getting IBAN for account {account_number}: {e}")
+            elif mode == 'types':
+                if accs_data:
+                    # Take only one example
+                    first_account = accs_data[0]
+                    account_example = convert_to_type_structure(first_account)
+                    save_json(account_example, 'account_types.json', target_dir)
+                    
+                    # Get operations for the first account
+                    real_account_number = first_account['numeroCompte']
+                    print(f"Retrieving operations for example account...")
+                    acc = accs.search(real_account_number)
+                    current_date = datetime.today()
+                    previous_date = current_date - timedelta(days=30)
+                    date_stop = current_date.strftime('%Y-%m-%d')
+                    date_start = previous_date.strftime('%Y-%m-%d')
+                    
+                    try:
+                        ops = acc.get_operations(date_start=date_start, date_stop=date_stop, count=10)
+                        ops_data = json.loads(ops.as_json())
+                        if ops_data:
+                            operation_example = convert_to_type_structure(ops_data[0])
+                            save_json(operation_example, "operation_types.json", target_dir)
+                    except Exception as e:
+                        print(f"Error retrieving operations: {e}")
             
+            elif mode == 'string':
+                # Save all accounts
+                accounts_list = json.loads(accs.as_json())
+                save_str(accounts_list, "accounts.txt", target_dir)
+                
+                # Process each account for operations and IBAN
+                for account in accounts_list:
+                    account_number = account['numeroCompte']
+                    print(f"Getting operations for account {account_number}...")
+                    
+                    # Get operations for this account
+                    acc = accs.search(account_number)
+                    current_date = datetime.today()
+                    previous_date = current_date - timedelta(days=30)
+                    date_stop = current_date.strftime('%Y-%m-%d')
+                    date_start = previous_date.strftime('%Y-%m-%d')
+                    
+                    try:
+                        ops = acc.get_operations(date_start=date_start, date_stop=date_stop, count=10)
+                        ops_list = json.loads(ops.as_json())
+                        save_str(ops_list, f"account_{account_number}_operations.txt", target_dir)
+                    except Exception as e:
+                        print(f"Error getting operations for account {account_number}: {e}")
+                    
+                    # Create empty IBAN file
+                    print(f"Creating empty IBAN file for account {account_number}...")
+                    try:
+                        save_str([], f"account_{account_number}_iban.txt", target_dir)
+                    except Exception as e:
+                        print(f"Error creating IBAN file for account {account_number}: {e}")
+        
         # Get cards
         print("Getting cards...")
         try:
             user_cards = cards.Cards(auth)
             cards_data = json.loads(user_cards.as_json())
             
-            # Apply type structure if needed
-            if args.mode == 'types':
-                if cards_data:
-                    # Get the card ID for the API call
-                    real_card_id = cards_data[0]['idCarte']
-                    real_card_last_4 = real_card_id[-4:]
-                    
-                    # Convert to type structure
-                    card_example = convert_to_type_structure(cards_data[0])
-                    
-                    # Save a single card example
-                    save_json(card_example, 'card_types.json', target_dir)
-                    
-                    # Get operations for a card (use real card for API call)
-                    try:
-                        print(f"Getting card operations sample structure...")
-                        card_obj = user_cards.search(real_card_last_4)
-                        deferred_ops = card_obj.get_operations()
-                        ops_data = json.loads(deferred_ops.as_json())
-                        if ops_data:
-                            # Keep only one operation
-                            operation_example = convert_to_type_structure(ops_data[0])
-                            save_json(operation_example, "operation_card_types.json", target_dir)
-                    except Exception as e:
-                        print(f"Error getting card operations sample: {e}")
-            else:                
-                # Save all cards data with new filename format
-                new_cards_filename = f"cards.json"
-                save_json(cards_data, new_cards_filename, target_dir)
+            # Process cards for each mode
+            for mode in modes:
+                target_dir = get_target_dir(args.output_dir, mode, len(modes) == 1)
                 
-                # Process each card individually for operations
-                for i, card in enumerate(cards_data):
-                    card_id = card['idCarte']
-                    card_last_4 = card_id.split()[-1][-4:] if ' ' in card_id else card_id[-4:]
-                    print(f"Processing card ending with {card_last_4}...")
+                if mode == 'json':
+                    # Save all cards data
+                    save_json(cards_data, "cards.json", target_dir)
                     
-                    # Get operations for this card
-                    try:
-                        print(f"Getting operations for card {card_last_4}...")
-                        card_obj = user_cards.search(card_last_4)
-                        deferred_ops = card_obj.get_operations()
-                        ops_data = json.loads(deferred_ops.as_json())
-                        new_operations_filename = f"card_{card_last_4}_operations.json"
-                        save_json(ops_data, new_operations_filename, target_dir)
-                    except Exception as e:
-                        print(f"Error getting operations for card {card_last_4}: {e}")
+                    # Process each card individually for operations
+                    for card in cards_data:
+                        card_id = card['idCarte']
+                        card_last_4 = card_id.split()[-1][-4:] if ' ' in card_id else card_id[-4:]
+                        print(f"Processing card ending with {card_last_4}...")
+                        
+                        try:
+                            print(f"Getting operations for card {card_last_4}...")
+                            card_obj = user_cards.search(card_last_4)
+                            deferred_ops = card_obj.get_operations()
+                            ops_data = json.loads(deferred_ops.as_json())
+                            save_json(ops_data, f"card_{card_last_4}_operations.json", target_dir)
+                        except Exception as e:
+                            print(f"Error getting operations for card {card_last_4}: {e}")
+                
+                elif mode == 'types':
+                    if cards_data:
+                        # Take only one example
+                        first_card = cards_data[0]
+                        card_example = convert_to_type_structure(first_card)
+                        save_json(card_example, 'card_types.json', target_dir)
+                        
+                        try:
+                            print(f"Getting card operations sample structure...")
+                            card_id = first_card['idCarte']
+                            card_last_4 = card_id.split()[-1][-4:] if ' ' in card_id else card_id[-4:]
+                            card_obj = user_cards.search(card_last_4)
+                            deferred_ops = card_obj.get_operations()
+                            ops_data = json.loads(deferred_ops.as_json())
+                            if ops_data:
+                                operation_example = convert_to_type_structure(ops_data[0])
+                                save_json(operation_example, "operation_card_types.json", target_dir)
+                        except Exception as e:
+                            print(f"Error getting card operations sample: {e}")
+                
+                elif mode == 'string':
+                    # Save all cards
+                    cards_list = json.loads(user_cards.as_json())
+                    save_str(cards_list, "cards.txt", target_dir)
+                    
+                    # Process each card individually for operations
+                    for card in cards_list:
+                        card_id = card['idCarte']
+                        card_last_4 = card_id.split()[-1][-4:] if ' ' in card_id else card_id[-4:]
+                        print(f"Processing card ending with {card_last_4}...")
+                        
+                        try:
+                            print(f"Getting operations for card {card_last_4}...")
+                            card_obj = user_cards.search(card_last_4)
+                            deferred_ops = card_obj.get_operations()
+                            ops_list = json.loads(deferred_ops.as_json())
+                            save_str(ops_list, f"card_{card_last_4}_operations.txt", target_dir)
+                        except Exception as e:
+                            print(f"Error getting operations for card {card_last_4}: {e}")
             
         except Exception as e:
             print(f"Error getting cards: {e}")

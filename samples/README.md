@@ -3,8 +3,9 @@
 ## Table des matières
 - [Introduction](#introduction)
 - [Fichiers de Données d'Exemple](#fichiers-de-données-dexemple)
-  - [Mode de données](#mode-de-données)
-  - [Mode de types](#mode-de-types)
+  - [Mode JSON](#mode-json)
+  - [Mode String](#mode-string)
+  - [Mode Types](#mode-types)
 - [Script de Création d'Exemples](#script-de-création-dexemples)
   - [Prérequis](#prérequis)
   - [Utilisation](#utilisation)
@@ -21,48 +22,48 @@ Cette documentation explique comment utiliser les fichiers de données d'exemple
 
 ## Fichiers de Données d'Exemple
 
-Le dossier `/data` contient des fichiers JSON qui représentent les structures de données renvoyées par le service du Crédit Agricole. Deux modes d'extraction sont disponibles, créant différents formats de fichiers :
+Le script peut générer des fichiers dans trois formats différents, selon le mode choisi. Si aucun mode n'est spécifié, tous les modes seront exécutés.
 
-### Mode de données
+### Mode JSON
+Ce mode extrait vos données réelles et les sauvegarde au format JSON. Ces fichiers contiennent toutes vos informations financières.
 
-Ce mode (par défaut) extrait vos données réelles et les sauvegarde sans suffixe. Ces fichiers contiennent toutes vos informations financières.
+**Fichiers générés :**
+- `accounts.json` : Liste complète des comptes
+- `account_{numeroCompte}_operations.json` : Historique des opérations pour chaque compte
+- `account_{numeroCompte}_iban.json` : Coordonnées IBAN pour chaque compte
+- `cards.json` : Liste complète des cartes
+- `card_{last4}_operations.json` : Historique des opérations pour chaque carte
+- `regionalBank_{code_département}.json` : Informations sur la banque régionale
 
-- **Fichiers Groupés par Type** :
-  - `accounts.json` : Liste complète des comptes
-  - `account_{numeroCompte}_operations.json` : Historique des opérations pour chaque compte (ex: `account_98765432109_operations.json`)
-  - `account_{numeroCompte}_iban.json` : Coordonnées IBAN pour chaque compte (ex: `account_98765432109_iban.json`)
-  - `cards.json` : Liste complète des cartes
-  - `card_{last4}_operations.json` : Historique des opérations pour chaque carte (ex: `card_9012_operations.json`)
-  - `regionalBank_{code_département}.json` : Informations sur la banque régionale d'un département (ex: `regionalBank_75.json`)
+### Mode String
+Ce mode extrait la structure des données en utilisant la représentation textuelle (`__str__`) des objets. Les fichiers sont sauvegardés avec l'extension `.txt`.
 
-### Mode de types
+**Fichiers générés :**
+- `accounts.txt` : Liste complète des comptes (un compte par ligne)
+- `account_{numeroCompte}_operations.txt` : Historique des opérations pour chaque compte (une opération par ligne)
+- `account_{numeroCompte}_iban.txt` : Fichier vide (l'IBAN n'est pas disponible en mode texte)
+- `cards.txt` : Liste complète des cartes (une carte par ligne)
+- `card_{last4}_operations.txt` : Historique des opérations pour chaque carte (une opération par ligne)
+- `regionalBank_{code_département}.txt` : Informations sur la banque régionale
 
-Ce mode (`--mode types`) extrait uniquement la structure des données avec des valeurs fictives en fonction des types de données. Les valeurs sont remplacées par :
-- Pour les chaînes : "" (chaîne vide)
-- Pour les nombres entiers : 0
-- Pour les nombres décimaux : 0.0
-- Pour les booléens : false
-- Pour les listes : un seul élément exemple
+### Mode Types
+Ce mode extrait uniquement la structure des données avec des valeurs fictives. Les valeurs sont remplacées par :
+- Chaînes : "" (chaîne vide)
+- Nombres entiers : 0
+- Nombres décimaux : 0.0
+- Booléens : false
+- Listes : un seul élément exemple
 
-Ces fichiers portent le suffixe `_types` et sont idéaux pour le développement sans manipuler de données personnelles. Les noms de fichiers sont simplifiés et utilisent la forme singulière.
-
-- **Fichiers d'Exemple** :
-  - `account_types.json` : Structure générique d'un compte
-  - `card_types.json` : Structure générique d'une carte
-  - `operation_types.json` : Structure générique d'une opération de compte
-  - `operation_card_types.json` : Structure générique d'une opération de carte
-  - `regionalBank_types.json` : Structure générique des informations bancaires
-
-Un seul exemple est généré pour chaque type de donnée, sans distinction par code ou identifiant.
+**Fichiers générés :**
+- `account_types.json` : Structure générique d'un compte
+- `card_types.json` : Structure générique d'une carte
+- `operation_types.json` : Structure générique d'une opération de compte
+- `operation_card_types.json` : Structure générique d'une opération de carte
+- `regionalBank_types.json` : Structure générique des informations bancaires
 
 ## Script de Création d'Exemples
 
-Le script `create_samples.py` se connecte à votre espace Crédit Agricole et récupère les données via la bibliothèque. Il est utile pour :
-
-1. Comprendre la structure complète des données disponibles
-2. Obtenir des exemples réels pour vos tests
-3. Vérifier si la structure des réponses du service a changé
-4. Générer une documentation de la structure des API sans exposer vos données financières
+Le script `create_samples.py` se connecte à votre espace Crédit Agricole et récupère les données via la bibliothèque.
 
 ### Prérequis
 
@@ -74,14 +75,19 @@ Le script `create_samples.py` se connecte à votre espace Crédit Agricole et r�
 
 Vous pouvez exécuter le script de plusieurs manières :
 
-1. En mode "data" (défaut) avec mot de passe en ligne de commande :
+1. Sans spécifier de mode (exécute tous les modes) :
 ```bash
-./create_samples.py --username VOTRE_IDENTIFIANT --password VOTRE_MOT_DE_PASSE --department VOTRE_CODE_DEPARTEMENT
+./create_samples.py --username VOTRE_IDENTIFIANT --department VOTRE_CODE_DEPARTEMENT
 ```
 
-2. En mode "types" avec saisie sécurisée du mot de passe :
+2. Avec un mode spécifique :
 ```bash
-./create_samples.py --username VOTRE_IDENTIFIANT --department VOTRE_CODE_DEPARTEMENT --mode types
+./create_samples.py --username VOTRE_IDENTIFIANT --department VOTRE_CODE_DEPARTEMENT --mode json
+```
+
+3. Avec plusieurs modes (séparés par des virgules) :
+```bash
+./create_samples.py --username VOTRE_IDENTIFIANT --department VOTRE_CODE_DEPARTEMENT --mode json,types
 ```
 
 ### Arguments de Ligne de Commande
@@ -89,16 +95,12 @@ Vous pouvez exécuter le script de plusieurs manières :
 - `--username` : Votre identifiant Crédit Agricole (obligatoire)
 - `--password` : Votre mot de passe Crédit Agricole (composé de chiffres). Si non fourni, il sera demandé de façon sécurisée
 - `--department` : Votre code département (nombre entier, obligatoire)
-- `--output-dir` : Dossier de destination pour les fichiers générés (par défaut : ./data pour le mode data, ./types pour le mode types)
-- `--mode` : Mode d'extraction des données (options : data, types ; défaut : data)
-  - `data` : Extrait vos données réelles (sensibles)
-  - `types` : Extrait uniquement la structure avec des valeurs fictives
+- `--output-dir` : Dossier de destination pour les fichiers générés (par défaut : ./output)
+- `--mode` : Modes de génération (séparés par des virgules) : 'json', 'types', 'str'. Si non spécifié, tous les modes seront exécutés.
 
 ### Utilisation des Mocks
 
-Le script supporte l'utilisation de mocks pour le développement et les tests. Cette fonctionnalité permet de :
-- Utiliser des données mockées au lieu d'appeler l'API réelle
-- Sauvegarder les réponses de l'API dans des fichiers mock pour une utilisation ultérieure
+Le script supporte l'utilisation de mocks pour le développement et les tests.
 
 Arguments spécifiques aux mocks :
 - `--use-mocks-dir` : Dossier contenant les fichiers mock à utiliser
@@ -106,88 +108,66 @@ Arguments spécifiques aux mocks :
 - `--use-mock-suffix` : Suffixe des fichiers mock à utiliser (par défaut : 'mock')
 - `--write-mock-suffix` : Suffixe pour les nouveaux fichiers mock (par défaut : 'mock')
 
-Exemples d'utilisation des mocks :
-```bash
-# Utiliser des mocks existants
-./create_samples.py --username johndoe --department 75 --use-mocks-dir ./mocks
-
-# Sauvegarder les réponses API comme mocks
-./create_samples.py --username johndoe --department 75 --write-mocks-dir ./mocks
-
-# Utiliser et sauvegarder des mocks avec des suffixes personnalisés
-./create_samples.py --username johndoe --department 75 --use-mocks-dir ./mocks --write-mocks-dir ./mocks --use-mock-suffix test --write-mock-suffix new
-```
-
 ### Exemples
 
-Exécution simple (utilise le mode "data" par défaut et sauvegarde dans le répertoire ./data) :
+Exécution de tous les modes :
 ```bash
 ./create_samples.py --username johndoe --department 75
 ```
 
-Extraction des données réelles avec paramètres explicites :
+Exécution d'un mode spécifique :
 ```bash
-./create_samples.py --username johndoe --department 75 --mode data --output-dir ./customData
+./create_samples.py --username johndoe --department 75 --mode json
 ```
 
-Extraction des structures de type uniquement :
+Exécution de plusieurs modes :
 ```bash
-./create_samples.py --username johndoe --department 75 --mode types
+./create_samples.py --username johndoe --department 75 --mode json,str
 ```
 
-Pour enregistrer les fichiers dans un dossier personnalisé :
+Avec un dossier de sortie personnalisé :
 ```bash
 ./create_samples.py --username johndoe --department 75 --output-dir ./mes_exemples
 ```
 
 ### Fonctionnement
 
-1. Le script s'authentifie auprès du Crédit Agricole avec vos identifiants
-2. Selon le mode choisi, il extrait soit les données réelles, soit uniquement les structures de type
+1. Le script s'authentifie auprès du Crédit Agricole
+2. Pour chaque mode sélectionné :
+   - Mode 'json' : Extrait et sauvegarde les données réelles au format JSON
+   - Mode 'types' : Extrait la structure avec des valeurs fictives au format JSON
+   - Mode 'str' : Extrait les représentations textuelles des données au format TXT
 
-**Mode 'data'** (défaut) :
-- Extrait toutes vos données financières réelles
-- Sauvegarde les comptes regroupés par grandeFamilleProduitCode
-- Sauvegarde les opérations et IBAN pour chaque compte
-- Sauvegarde les cartes et leurs opérations
-- Fichiers sauvegardés dans le dossier ./data par défaut
-
-**Mode 'types'** :
-- Extrait uniquement la structure des données
-- Remplace les valeurs réelles par des placeholders selon leur type
-- Sauvegarde un seul exemple pour chaque type de données (compte, carte, opération)
-- Utilise des noms de fichiers au singulier avec le suffixe '_types'
-- Fichiers sauvegardés dans le dossier ./types par défaut
-
-3. Les données sont enregistrées au format JSON dans le dossier spécifié
+3. Structure des dossiers :
+   - Si un seul mode est spécifié : les fichiers sont écrits directement dans le dossier de sortie
+   - Si plusieurs modes sont spécifiés : un sous-dossier est créé pour chaque mode
 
 ### Considérations de Sécurité
 
 - Le script ne conserve pas vos identifiants
 - Exécutez-le uniquement sur un système sécurisé
-- Pour éviter d'exposer vos données financières, utilisez le mode 'types' pour le développement et la documentation
+- Pour éviter d'exposer vos données financières, utilisez les modes 'types' ou 'str' pour le développement
 
 ## Utilisation des Données d'Exemple pour le Développement
 
 Les fichiers d'exemple peuvent servir pendant le développement à :
 
-1. **Analyser la Structure des Données** : Explorer les champs disponibles dans chaque type de réponse
-2. **Créer des Interfaces** : Concevoir des écrans qui affichent correctement les données
-3. **Développer Sans Connexion** : Travailler sur votre application sans connexion au service du Crédit Agricole
-4. **Automatiser les Tests** : Créer des tests avec des données prévisibles et constantes
+1. **Analyser la Structure des Données** : Explorer les champs disponibles
+2. **Créer des Interfaces** : Concevoir des écrans d'affichage
+3. **Développer Sans Connexion** : Travailler sans connexion à l'API
+4. **Automatiser les Tests** : Créer des tests avec des données prévisibles
 
-Le mode 'types' est particulièrement utile pour:
+Les modes 'types' et 'str' sont particulièrement utiles pour :
 - Comprendre la structure des API sans exposer des données sensibles
 - Partager des exemples dans un dépôt de code
 - Créer une documentation technique
+- Générer des schémas de validation de données
 
 ## Mise à Jour des Exemples
 
 Pour mettre à jour les fichiers d'exemple :
 
-1. Exécutez le script `create_samples.py` avec vos identifiants et le mode souhaité
+1. Exécutez le script avec vos identifiants et le(s) mode(s) souhaité(s)
 2. Vérifiez les fichiers générés dans le dossier de destination
-3. Pour les fichiers en mode 'types', vous pouvez les ajouter directement à votre dépôt de code
-4. Pour les fichiers en mode 'data', assurez-vous d'anonymiser toute information personnelle avant de les partager
-
-N'oubliez pas d'anonymiser toute information personnelle ou confidentielle avant d'enregistrer ces fichiers dans un système de gestion de versions. 
+3. Pour les fichiers en mode 'types' ou 'str', vous pouvez les ajouter directement à votre dépôt de code
+4. Pour les fichiers en mode 'json', assurez-vous d'anonymiser toute information personnelle avant de les partager 
