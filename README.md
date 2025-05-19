@@ -1,3 +1,5 @@
+> **⚠️ Fork** - Ce projet est un fork de [creditagricole-particuliers](https://github.com/dmachard/creditagricole-particuliers) par [@dmachard](https://github.com/dmachard). Voir [FORK.md](FORK.md) pour plus d'informations sur les modifications proposées.
+
 # Client Python pour la banque Crédit agricole - Particuliers
 
 Ce fork a été créé pour permettre l'installation directe depuis Git avec pip. Cela offre deux avantages principaux :
